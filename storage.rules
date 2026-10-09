@@ -1,0 +1,103 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidImageType() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isValidVideoType() {
+      return request.resource.contentType.matches('video/.*');
+    }
+    
+    function isUnder50MB() {
+      return request.resource.size < 50 * 1024 * 1024;
+    }
+    
+    function isUnder5MB() {
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // ===============================================================
+    // Product Videos
+    // ===============================================================
+    match /product-videos/{userId}/{allPaths=**} {
+      // Anyone can view product videos
+      allow read: if true;
+      
+      // Only authenticated users can upload to their own folder
+      allow write: if isOwner(userId) && 
+                      isValidVideoType() && 
+                      isUnder50MB();
+      
+      // Allow delete by owner
+      allow delete: if isOwner(userId);
+    }
+
+    // ===============================================================
+    // Product Images
+    // ===============================================================
+    match /product-images/{userId}/{allPaths=**} {
+      // Anyone can view product images
+      allow read: if true;
+      
+      // Only authenticated users can upload to their own folder
+      allow write: if isOwner(userId) && 
+                      isValidImageType() && 
+                      isUnder5MB();
+      
+      // Allow delete by owner
+      allow delete: if isOwner(userId);
+    }
+
+    // ===============================================================
+    // Profile Pictures
+    // ===============================================================
+    match /profile-pictures/{userId}/{allPaths=**} {
+      // Anyone can view profile pictures
+      allow read: if true;
+      
+      // Only the user can upload their own profile picture
+      allow write: if isOwner(userId) && 
+                      isValidImageType() && 
+                      isUnder5MB();
+      
+      // Allow delete by owner
+      allow delete: if isOwner(userId);
+    }
+
+    // ===============================================================
+    // Receipt/Invoice PDFs
+    // ===============================================================
+    match /receipts/{userId}/{allPaths=**} {
+      // Only owner can read their receipts
+      allow read: if isOwner(userId);
+      
+      // Only owner can upload
+      allow write: if isOwner(userId) && 
+                      request.resource.contentType == 'application/pdf' &&
+                      isUnder5MB();
+      
+      // Allow delete by owner
+      allow delete: if isOwner(userId);
+    }
+
+    // ===============================================================
+    // Catch-all: Deny everything else
+    // ===============================================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

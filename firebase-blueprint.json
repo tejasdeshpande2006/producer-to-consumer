@@ -1,0 +1,135 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents a user in the system with specific roles and wallet balance.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "smsNotifications": { "type": "boolean" },
+        "role": { "type": "string", "enum": ["admin", "producer", "consumer", "delivery"] },
+        "walletBalance": { "type": "number" },
+        "isVerified": { "type": "boolean" },
+        "pendingProfileChanges": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "email": { "type": "string" },
+            "phoneNumber": { "type": "string" },
+            "timestamp": { "type": "string", "format": "date-time" }
+          }
+        },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" },
+            "lastUpdated": { "type": "string", "format": "date-time" }
+          }
+        }
+      },
+      "required": ["uid", "name", "email", "role", "walletBalance"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "A product listed by a producer.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sellerId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "stock": { "type": "number" },
+        "category": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "videoUrl": { "type": "string" }
+      },
+      "required": ["sellerId", "title", "price", "stock", "category"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "An order placed by a consumer.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "buyerId": { "type": "string" },
+        "sellerId": { "type": "string" },
+        "deliveryBoyId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "shipped", "delivered", "cancelled"] },
+        "totalAmount": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "items": { "type": "array" }
+      },
+      "required": ["buyerId", "sellerId", "status", "totalAmount", "timestamp"]
+    },
+    "WalletTransaction": {
+      "title": "WalletTransaction",
+      "description": "A record of a wallet transaction (credit or debit).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["credit", "debit"] },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "description": { "type": "string" }
+      },
+      "required": ["amount", "type", "timestamp", "description"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "A review for a product.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "userName", "rating", "comment", "timestamp"]
+    },
+    "WishlistItem": {
+      "title": "WishlistItem",
+      "description": "A product added to a user's wishlist.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "productId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "productId", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/users/{userId}/walletTransactions/{transactionId}": {
+      "schema": "WalletTransaction",
+      "description": "User wallet transaction history"
+    },
+    "/users/{userId}/wishlist/{wishlistId}": {
+      "schema": "WishlistItem",
+      "description": "User wishlist items"
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Product catalog"
+    },
+    "/products/{productId}/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Product reviews"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Order records"
+    }
+  }
+}

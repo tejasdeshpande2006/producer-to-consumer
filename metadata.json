@@ -1,0 +1,5 @@
+{
+  "name": "P2C E-commerce Ecosystem",
+  "description": "A high-fidelity Producer-to-Consumer e-commerce platform with role-based access, wallet system, and real-time order tracking.",
+  "requestFramePermissions": ["geolocation"]
+}

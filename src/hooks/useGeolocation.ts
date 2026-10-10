@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { db, auth } from '../firebase';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db, doc, updateDoc, serverTimestamp } from '../shims/supabase/firestore';
 import { UserProfile } from '../types';
 
 export const useGeolocation = (profile: UserProfile | null) => {

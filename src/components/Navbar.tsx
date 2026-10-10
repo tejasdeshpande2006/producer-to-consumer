@@ -3,8 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Wallet, User, LogOut, Shield, Truck, Heart, Menu, X, ChevronRight, Package } from 'lucide-react';
 import P2CLogo from './P2CLogo';
 import { useAuth } from '../context/AuthContext';
-import { auth } from '../firebase';
-import { signOut } from 'firebase/auth';
+import { supabase } from '../supabase';
 
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -14,7 +13,7 @@ const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await supabase?.auth.signOut();
     navigate('/');
     setIsMenuOpen(false);
   };

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { db, auth } from '../firebase';
-import { doc, updateDoc, serverTimestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
-import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { db, doc, updateDoc, serverTimestamp, arrayUnion, arrayRemove } from '../shims/supabase/firestore';
+import { supabase } from '../supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { User, Mail, Shield, Clock, CheckCircle, AlertCircle, Phone, Lock, Eye, EyeOff, Truck, LogOut, MapPin, Plus, Home, Briefcase, Trash2, Star, Edit2, X } from 'lucide-react';
 import { SavedAddress } from '../types';
@@ -199,7 +198,7 @@ const Profile: React.FC = () => {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !user.email) return;
+    if (!user || !user.email || !supabase) return;
 
     if (newPassword !== confirmPassword) {
       setMessage({ type: 'error', text: 'New passwords do not match.' });
@@ -210,9 +209,20 @@ const Profile: React.FC = () => {
     setMessage(null);
 
     try {
-      const credential = EmailAuthProvider.credential(user.email, currentPassword);
-      await reauthenticateWithCredential(user, credential);
-      await updatePassword(user, newPassword);
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+
+      if (signInError) {
+        throw signInError;
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+
+      if (updateError) {
+        throw updateError;
+      }
       
       setMessage({ type: 'success', text: 'Password changed successfully!' });
       setCurrentPassword('');
@@ -829,9 +839,7 @@ const Profile: React.FC = () => {
       >
         <button
           onClick={async () => {
-            const { signOut } = await import('firebase/auth');
-            const { auth } = await import('../firebase');
-            await signOut(auth);
+            await supabase?.auth.signOut();
             window.location.href = '/';
           }}
           className="w-full py-6 bg-red-50 text-red-600 rounded-[1.5rem] font-black text-xl uppercase tracking-widest border-2 border-red-100 hover:bg-red-100 transition-all flex items-center justify-center gap-4 shadow-xl shadow-red-100/50"

@@ -21,8 +21,6 @@
     "dexie": "^4.3.0",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
-    "firebase": "^12.11.0",
-    "firebase-admin": "^13.7.0",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "leaflet": "^1.9.4",

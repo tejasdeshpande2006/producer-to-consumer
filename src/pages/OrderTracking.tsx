@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { db, handleFirestoreError, OperationType } from '../firebase';
-import { doc, onSnapshot, getDoc } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType, doc, onSnapshot, getDoc } from '../shims/supabase/firestore';
 import { Order, UserProfile } from '../types';
 import { MapPin, Truck, ChevronLeft, Navigation, Phone, MessageCircle, Clock, CheckCircle2, Map as MapIcon, Bell, Zap, XCircle, Locate } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMap } from 'react-leaflet';
@@ -406,7 +405,7 @@ const OrderTracking: React.FC = () => {
                 <div className="bg-emerald-600 text-white px-4 py-2 rounded-2xl shadow-lg border border-emerald-500/20">
                   <div className="flex items-center space-x-2">
                     <Zap className="w-3 h-3" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">AI Optimized Route</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Route Updated</span>
                   </div>
                 </div>
               )}
@@ -528,8 +527,7 @@ const OrderTracking: React.FC = () => {
               <h4 className="font-bold">Delivery Address</h4>
             </div>
             <p className="text-sm text-indigo-900 font-medium leading-relaxed">
-              123 Main St, Suite 456,<br />
-              Metro City, MC 12345
+              Delivery address will be shown once the order is confirmed.
             </p>
           </div>
         </div>

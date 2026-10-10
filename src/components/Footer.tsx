@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
               <span className="text-2xl font-black tracking-tighter text-gray-900">P2C<span className="text-indigo-600">.</span></span>
             </Link>
             <p className="text-gray-500 text-sm leading-relaxed mb-6">
-              Connecting local producers directly with consumers. Fresh, authentic, and sustainable products delivered to your doorstep.
+              Everyday essentials, fresh groceries, and locally sourced products delivered with care.
             </p>
             <div className="flex space-x-4">
               {[Github, Twitter, Instagram].map((Icon, i) => (
@@ -64,15 +64,15 @@ const Footer: React.FC = () => {
             <ul className="space-y-4">
               <li className="flex items-start space-x-3 text-sm text-gray-500">
                 <MapPin className="w-5 h-5 text-indigo-600 shrink-0" />
-                <span>123 Market Street, City Center, IN 400001</span>
+                <span>Bengaluru, Karnataka, India</span>
               </li>
               <li className="flex items-center space-x-3 text-sm text-gray-500">
                 <Phone className="w-5 h-5 text-indigo-600 shrink-0" />
-                <span>+91 98765 43210</span>
+                <span>+91 90000 00000</span>
               </li>
               <li className="flex items-center space-x-3 text-sm text-gray-500">
                 <Mail className="w-5 h-5 text-indigo-600 shrink-0" />
-                <span>support@p2c.com</span>
+                <span>hello@p2cmarket.in</span>
               </li>
             </ul>
           </div>

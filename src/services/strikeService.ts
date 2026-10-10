@@ -1,5 +1,4 @@
-import { db, handleFirestoreError, OperationType } from '../firebase';
-import { doc, getDoc, updateDoc, increment, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType, doc, getDoc, updateDoc, increment, addDoc, collection, serverTimestamp } from '../shims/supabase/firestore';
 import { Order, UserProfile } from '../types';
 
 export const processOrderReturn = async (order: Order) => {

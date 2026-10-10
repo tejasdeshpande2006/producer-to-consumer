@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, collection, addDoc, serverTimestamp, updateDoc, increment, onSnapshot, query, orderBy, where, getDocs, deleteDoc } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType, toDate } from '../firebase';
+import { db, handleFirestoreError, OperationType, toDate, doc, getDoc, collection, addDoc, serverTimestamp, updateDoc, increment, onSnapshot, query, orderBy, where, getDocs, deleteDoc } from '../shims/supabase/firestore';
 import { Product, Review } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { ShoppingCart, ArrowLeft, ShieldCheck, Truck, Star, Heart, Send, User, CheckCircle, Trash2, MessageCircle, ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react';

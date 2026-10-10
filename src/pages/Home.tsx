@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { collection, query, onSnapshot } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { db, handleFirestoreError, OperationType, collection, query, onSnapshot } from '../shims/supabase/firestore';
 import { Product } from '../types';
 import { Link } from 'react-router-dom';
 import { Star, ShoppingCart, Search, Filter, WifiOff, RefreshCw, ChevronLeft, ChevronRight, Zap, ShieldCheck, Truck, ArrowRight, Leaf, Users, Heart, Mail, Shield, X, SlidersHorizontal } from 'lucide-react';
@@ -231,7 +230,7 @@ const Home: React.FC = () => {
               className="inline-flex items-center space-x-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full"
             >
               <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
-              <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">Direct from Source</span>
+              <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">From local farms</span>
             </motion.div>
             
             <motion.h1 
@@ -240,8 +239,8 @@ const Home: React.FC = () => {
               transition={{ delay: 0.3 }}
               className="text-7xl sm:text-9xl font-black text-white leading-[0.8] tracking-tighter font-display uppercase"
             >
-              FRESHNESS <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-400 italic font-serif lowercase">redefined.</span>
+              Fresh picks <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-400 italic font-serif lowercase">for everyday living.</span>
             </motion.h1>
             
             <motion.p 
@@ -250,10 +249,10 @@ const Home: React.FC = () => {
               transition={{ delay: 0.4 }}
               className="text-gray-300 text-xl font-medium max-w-xl leading-relaxed border-l-4 border-emerald-500 pl-8 py-2"
             >
-              Connect directly with local producers and get the highest quality goods delivered to your doorstep.
+              Shop fresh groceries, pantry essentials, and home staples from trusted producers and local makers.
             </motion.p>
-            
-            <motion.div 
+
+            <motion.div
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5 }}
@@ -281,25 +280,6 @@ const Home: React.FC = () => {
             </motion.div>
           </div>
           
-          {/* Floating Stats */}
-          <div className="absolute bottom-12 right-12 hidden lg:flex space-x-8">
-            {[
-              { label: 'Producers', value: '500+' },
-              { label: 'Products', value: '2k+' },
-              { label: 'Happy Users', value: '10k+' }
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.6 + (i * 0.1) }}
-                className="text-right"
-              >
-                <p className="text-3xl font-black text-white font-display">{stat.value}</p>
-                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
         </motion.div>
       </div>
 

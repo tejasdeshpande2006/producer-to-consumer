@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { db, handleFirestoreError, OperationType, collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp } from '../shims/supabase/firestore';
 import { Order } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { Truck, Package, MapPin, CheckCircle2, Clock, Navigation, Power, CheckCircle, Wallet } from 'lucide-react';
@@ -13,7 +12,6 @@ const DeliveryDashboard: React.FC = () => {
 
   useEffect(() => {
     if (!profile) return;
-    // For demo, show all 'confirmed' or 'shipped' orders
     const q = query(collection(db, 'orders'), where('status', 'in', ['confirmed', 'shipped', 'delivered']));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
@@ -176,7 +174,7 @@ const DeliveryDashboard: React.FC = () => {
                   <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Delivery Address</p>
-                    <p className="font-bold text-gray-900">123 Main St, Suite 456, Metro City</p>
+                    <p className="font-bold text-gray-900">Delivery address will be shown here once the customer confirms it.</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">

@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../supabase';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogIn, Mail, Lock, ArrowRight } from 'lucide-react';
 
@@ -9,77 +8,57 @@ import { motion } from 'motion/react';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
   const handleGoogleLogin = async () => {
-    if (loading) return;
+    if (loading || !supabase) return;
     setLoading(true);
     setError(null);
 
-    const performLogin = async (retryCount = 0): Promise<void> => {
-      try {
-        const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
-        navigate('/');
-      } catch (err: any) {
-        if (err.code === 'auth/popup-closed-by-user') {
-          setLoading(false);
-          return;
-        }
-        
-        if (err.code === 'auth/network-request-failed' && retryCount < 1) {
-          // Wait a bit and retry once
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          return performLogin(retryCount + 1);
-        }
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
 
-        if (err.code === 'auth/network-request-failed') {
-          setError('Network error: Please check your internet connection or disable any ad-blockers/VPNs that might be blocking Firebase. If you are in a restricted network, try a different one.');
-          setLoading(false);
-          return;
-        }
-        console.error('Login error:', err);
-        setError(err.message || 'An unexpected error occurred during login.');
-        setLoading(false);
-      }
-    };
-
-    await performLogin();
-    setLoading(false);
+    if (oauthError) {
+      console.error('Login error:', oauthError);
+      setError(oauthError.message || 'Failed to start Google sign-in.');
+      setLoading(false);
+      return;
+    }
   };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading) return;
+    if (loading || !supabase) return;
     setLoading(true);
     setError(null);
 
-    const performEmailLogin = async (retryCount = 0): Promise<void> => {
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        navigate('/');
-      } catch (err: any) {
-        if (err.code === 'auth/network-request-failed' && retryCount < 1) {
-          // Wait a bit and retry once
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          return performEmailLogin(retryCount + 1);
-        }
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-        if (err.code === 'auth/network-request-failed') {
-          setError('Network error: Please check your internet connection or disable any ad-blockers/VPNs that might be blocking Firebase.');
-          setLoading(false);
-          return;
-        }
-        console.error('Login error:', err);
-        setError(err.message || 'Invalid email or password.');
-        setLoading(false);
-      }
-    };
+    if (signInError) {
+      console.error('Login error:', signInError);
+      setError(signInError.message || 'Invalid email or password.');
+      setLoading(false);
+      return;
+    }
 
-    await performEmailLogin();
+    navigate('/');
     setLoading(false);
   };
 

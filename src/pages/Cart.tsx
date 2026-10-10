@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { db, handleFirestoreError, OperationType } from '../firebase';
-import { collection, onSnapshot, deleteDoc, doc, addDoc, serverTimestamp, updateDoc, increment, getDocs, writeBatch } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType, collection, onSnapshot, deleteDoc, doc, addDoc, serverTimestamp, updateDoc, increment, getDocs, writeBatch } from '../shims/supabase/firestore';
 import { Trash2, ShoppingBag, ArrowRight, Wallet as WalletIcon, CheckCircle2, Minus, Plus, MapPin, Phone, User, Home, Briefcase, Star, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SavedAddress } from '../types';

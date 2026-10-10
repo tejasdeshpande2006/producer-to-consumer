@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType, toDate } from '../firebase';
+import { db, handleFirestoreError, OperationType, toDate, collection, query, orderBy, onSnapshot } from '../shims/supabase/firestore';
 import { History, ArrowUpRight, ArrowDownLeft, ChevronLeft, Search } from 'lucide-react';
 import { WalletTransaction } from '../types';
 import { useNavigate } from 'react-router-dom';

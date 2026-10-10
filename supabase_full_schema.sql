@@ -56,6 +56,7 @@ create table if not exists public.profiles (
   is_online boolean not null default false,
   strikes integer not null default 0 check (strikes >= 0),
   is_suspended boolean not null default false,
+  saved_addresses jsonb not null default '[]'::jsonb,
   pending_profile_changes jsonb,
   location jsonb,
   last_location_update timestamptz,
@@ -100,6 +101,9 @@ create table if not exists public.orders (
   status text not null default 'pending' check (status in ('pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'returned')),
   total_amount numeric(10, 2) not null check (total_amount >= 0),
   delivery_coordinates jsonb,
+  items jsonb not null default '[]'::jsonb,
+  delivery_details jsonb,
+  return_request jsonb,
   timestamp timestamptz not null default now(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -176,6 +180,17 @@ create table if not exists public.audit_logs (
   operation_type text not null,
   changes jsonb,
   user_id uuid references public.profiles(id) on delete set null,
+  timestamp timestamptz not null default now()
+);
+
+-- Notifications used by order, return, and account workflows
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  title text not null,
+  message text not null,
+  type text not null default 'info',
+  read boolean not null default false,
   timestamp timestamptz not null default now()
 );
 

@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth, db } from '../firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../supabase';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserPlus, Mail, Lock, User, ArrowRight } from 'lucide-react';
 
@@ -9,6 +8,7 @@ import { motion } from 'motion/react';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>('consumer');
@@ -17,110 +17,69 @@ const Register: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
 
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
   const handleGoogleRegister = async () => {
-    if (loading) return;
+    if (loading || !supabase) return;
     setLoading(true);
     setError(null);
 
-    const performGoogleRegister = async (retryCount = 0): Promise<void> => {
-      try {
-        const provider = new GoogleAuthProvider();
-        const result = await signInWithPopup(auth, provider);
-        
-        const profileRef = doc(db, 'users', result.user.uid);
-        const profileSnap = await getDoc(profileRef);
-        
-        if (profileSnap.exists()) {
-          setError('An account already exists with this Google account. Please login instead.');
-          setLoading(false);
-          return;
-        }
-
-        await setDoc(profileRef, {
-          uid: result.user.uid,
-          name: result.user.displayName || 'User',
-          email: result.user.email || '',
-          phoneNumber: '',
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+        queryParams: {
           role: selectedRole,
-          walletBalance: 0,
-          isVerified: selectedRole === 'admin' // Auto-verify admin for demo
-        });
-      } catch (err: any) {
-        if (err.code === 'auth/popup-closed-by-user') {
-          setLoading(false);
-          return;
-        }
-        
-        if (err.code === 'auth/network-request-failed' && retryCount < 1) {
-          // Wait a bit and retry once
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          return performGoogleRegister(retryCount + 1);
-        }
+        },
+      },
+    });
 
-        if (err.code === 'auth/network-request-failed') {
-          setError('Network error: Please check your internet connection or disable any ad-blockers/VPNs that might be blocking Firebase.');
-          setLoading(false);
-          return;
-        }
-        console.error('Registration error:', err);
-        setError(err.message || 'An unexpected error occurred during registration.');
-        setLoading(false);
-      }
-    };
-
-    await performGoogleRegister();
-    setLoading(false);
+    if (oauthError) {
+      console.error('Registration error:', oauthError);
+      setError(oauthError.message || 'Failed to start Google registration.');
+      setLoading(false);
+      return;
+    }
   };
 
   const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading) return;
+    if (loading || !supabase) return;
     setLoading(true);
     setError(null);
 
-    const performEmailRegister = async (retryCount = 0): Promise<void> => {
-      try {
-        const result = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(result.user, { displayName: name });
-        
-        const isAdminEmail = email.toLowerCase() === 'vpk525252@gmail.com';
-        const role = isAdminEmail ? 'admin' : selectedRole;
-        
-        const profileRef = doc(db, 'users', result.user.uid);
-        await setDoc(profileRef, {
-          uid: result.user.uid,
-          name: name,
-          email: email,
-          phoneNumber: phoneNumber,
-          role: role,
-          walletBalance: 0,
-          isVerified: role === 'admin'
-        });
-        
-        navigate('/');
-      } catch (err: any) {
-        if (err.code === 'auth/network-request-failed' && retryCount < 1) {
-          // Wait a bit and retry once
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          return performEmailRegister(retryCount + 1);
-        }
+    const role = selectedRole;
 
-        if (err.code === 'auth/network-request-failed') {
-          setError('Network error: Please check your internet connection or disable any ad-blockers/VPNs that might be blocking Firebase.');
-          setLoading(false);
-          return;
-        }
-        console.error('Registration error:', err);
-        if (err.code === 'auth/email-already-in-use') {
-          setError('This email is already registered. Please login instead.');
-        } else {
-          setError(err.message || 'Failed to create account.');
-        }
-        setLoading(false);
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          displayName: name,
+          name,
+          phoneNumber,
+          role,
+          smsNotifications: false,
+        },
+      },
+    });
+
+    if (signUpError) {
+      console.error('Registration error:', signUpError);
+      if (signUpError.message.toLowerCase().includes('already registered')) {
+        setError('This email is already registered. Please login instead.');
+      } else {
+        setError(signUpError.message || 'Failed to create account.');
       }
-    };
+      setLoading(false);
+      return;
+    }
 
-    await performEmailRegister();
+    navigate('/');
     setLoading(false);
   };
 

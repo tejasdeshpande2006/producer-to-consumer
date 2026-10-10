@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, onSnapshot, doc, getDoc, deleteDoc } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { db, handleFirestoreError, OperationType, collection, query, onSnapshot, doc, getDoc, deleteDoc } from '../shims/supabase/firestore';
 import { Product, WishlistItem } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';

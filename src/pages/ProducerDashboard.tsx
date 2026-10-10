@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { db, storage, handleFirestoreError, OperationType } from '../firebase';
-import { collection, query, where, onSnapshot, addDoc, deleteDoc, doc, updateDoc, orderBy, getDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, handleFirestoreError, OperationType, collection, query, where, onSnapshot, addDoc, deleteDoc, doc, updateDoc, orderBy, getDoc } from '../shims/supabase/firestore';
+import { ref, uploadBytes, getDownloadURL, storage } from '../shims/supabase/storage';
 import { Product, Order } from '../types';
 import { Plus, Package, Trash2, Edit3, CheckCircle, XCircle, AlertCircle, ShoppingBag, Truck, Clock, MapPin, Sparkles, Loader2, RefreshCw, Camera, Upload, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -168,7 +167,7 @@ const ProducerDashboard: React.FC = () => {
       const fileName = `product-videos/${profile?.uid || 'unknown'}/${timestamp}-${file.name}`;
       const storageRef = ref(storage, fileName);
       
-      // Upload to Firebase Storage
+      // Upload to Supabase Storage
       await uploadBytes(storageRef, file);
       const downloadUrl = await getDownloadURL(storageRef);
 
@@ -714,7 +713,7 @@ const ProducerDashboard: React.FC = () => {
                   <p className="font-bold text-gray-900 text-lg">{selectedOrder.buyerName || 'Unknown Buyer'}</p>
                   <p className="text-sm text-gray-500 mt-2 flex items-start space-x-2">
                     <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                    <span>{selectedOrder.shippingAddress || '123 Main St, Suite 456, Metro City'}</span>
+                    <span>{selectedOrder.shippingAddress || 'Delivery address will be shown after checkout.'}</span>
                   </p>
                 </div>
 

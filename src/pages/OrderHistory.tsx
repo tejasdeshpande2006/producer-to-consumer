@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { db, handleFirestoreError, OperationType, toDate } from '../firebase';
-import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType, toDate, collection, query, where, onSnapshot, doc, getDoc, updateDoc, increment, addDoc, serverTimestamp } from '../shims/supabase/firestore';
 import { Order, UserProfile } from '../types';
 import { Package, Clock, CheckCircle2, Truck, AlertCircle, MapPin, Calendar, Navigation, XCircle, WifiOff, RefreshCw, FileText, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { updateDoc, increment, addDoc, serverTimestamp } from 'firebase/firestore';
 import { offlineDb } from '../services/offlineDb';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { motion, AnimatePresence } from 'motion/react';
@@ -356,7 +354,7 @@ const OrderHistory: React.FC = () => {
                       </div>
                       <div className="space-y-1">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Shipping Address</p>
-                        <p className="text-sm font-bold text-gray-700 leading-relaxed">{order.shippingAddress || '123 Main St, Suite 456, Metro City'}</p>
+                        <p className="text-sm font-bold text-gray-700 leading-relaxed">{order.shippingAddress || 'Delivery address will be shown after checkout.'}</p>
                       </div>
                     </div>
 

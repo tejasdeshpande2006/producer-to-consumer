@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, onSnapshot, setDoc, getDoc, updateDoc } from 'firebase/firestore';
-import { auth, db, handleFirestoreError, OperationType } from '../firebase';
+import type { Session, User } from '@supabase/supabase-js';
+import { supabase, buildSupabaseProfilePayload, mapSupabaseProfile, type SupabaseProfileRow } from '../supabase';
 import { UserProfile } from '../types';
 
+type SupabaseAuthUser = User & { uid: string };
+
 interface AuthContextType {
-  user: User | null;
+  user: SupabaseAuthUser | null;
   profile: UserProfile | null;
   loading: boolean;
   isAdmin: boolean;
@@ -25,68 +26,93 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<SupabaseAuthUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let unsubProfile: (() => void) | null = null;
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
 
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      
-      if (unsubProfile) {
-        unsubProfile();
-        unsubProfile = null;
-      }
+    let mounted = true;
 
-      if (firebaseUser) {
-        const profileRef = doc(db, 'users', firebaseUser.uid);
-        
-        // Safety timeout for loading state
-        const timeoutId = setTimeout(() => {
-          setLoading(false);
-        }, 5000);
+    const hydrateProfile = async (session: Session | null) => {
+      if (!mounted) return;
 
-        unsubProfile = onSnapshot(profileRef, (docSnap) => {
-          clearTimeout(timeoutId);
-          if (docSnap.exists()) {
-            const data = docSnap.data() as UserProfile;
-            setProfile(data);
-            
-            // Auto-upgrade hardcoded admin email if not already admin
-            if (firebaseUser.email === 'vpk525252@gmail.com' && data.role !== 'admin') {
-              updateDoc(profileRef, { role: 'admin', isVerified: true })
-                .catch(err => console.error("Failed to auto-upgrade admin:", err));
-            }
-          } else {
-            const isAdminEmail = firebaseUser.email === 'vpk525252@gmail.com';
-            const newProfile: UserProfile = {
-              uid: firebaseUser.uid,
-              name: firebaseUser.displayName || 'User',
-              email: firebaseUser.email || '',
-              role: isAdminEmail ? 'admin' : 'consumer',
-              walletBalance: 0,
-              isVerified: isAdminEmail,
-            };
-            setDoc(profileRef, newProfile).catch(err => handleFirestoreError(err, OperationType.WRITE, `users/${firebaseUser.uid}`));
-            setProfile(newProfile);
-          }
-          setLoading(false);
-        }, (error) => {
-          clearTimeout(timeoutId);
-          handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
-          setLoading(false);
-        });
-      } else {
+      const authUser = session?.user ? ({ ...session.user, uid: session.user.id } as SupabaseAuthUser) : null;
+      setUser(authUser);
+
+      if (!authUser) {
         setProfile(null);
         setLoading(false);
+        return;
       }
+
+      const { data: existingProfile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .maybeSingle();
+
+      if (!mounted) return;
+
+      if (error) {
+        console.error('Failed to load Supabase profile:', error);
+      }
+
+      if (existingProfile) {
+        const mappedProfile = mapSupabaseProfile(existingProfile as SupabaseProfileRow);
+        setProfile(mappedProfile);
+      } else {
+        const email = authUser.email || '';
+        const payload = buildSupabaseProfilePayload({
+          uid: authUser.id,
+          email,
+          name: authUser.user_metadata?.displayName || authUser.user_metadata?.full_name || 'User',
+          role: (authUser.user_metadata?.role as UserProfile['role']) || 'consumer',
+          isVerified: false,
+          walletBalance: 0,
+        });
+
+        const { data: insertedProfile, error: insertError } = await supabase
+          .from('profiles')
+          .upsert(payload)
+          .select('*')
+          .single();
+
+        if (!mounted) return;
+
+        if (insertError) {
+          console.error('Failed to create Supabase profile:', insertError);
+          setProfile({
+            uid: authUser.id,
+            name: authUser.user_metadata?.displayName || authUser.user_metadata?.full_name || 'User',
+            email,
+            role: 'consumer',
+            walletBalance: 0,
+            isVerified: false,
+          });
+        } else if (insertedProfile) {
+          setProfile(mapSupabaseProfile(insertedProfile as SupabaseProfileRow));
+        }
+      }
+
+      setLoading(false);
+    };
+
+    supabase.auth.getSession().then(({ data }) => {
+      hydrateProfile(data.session || null);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      void hydrateProfile(session);
     });
 
     return () => {
-      unsubscribe();
-      if (unsubProfile) unsubProfile();
+      mounted = false;
+      authListener.subscription.unsubscribe();
     };
   }, []);
 
@@ -94,7 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     profile,
     loading,
-    isAdmin: profile?.role === 'admin' || user?.email === 'vpk525252@gmail.com',
+    isAdmin: profile?.role === 'admin',
     isProducer: profile?.role === 'producer',
     isConsumer: profile?.role === 'consumer',
     isDelivery: profile?.role === 'delivery',

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { collection, query, orderBy, onSnapshot, runTransaction, doc, serverTimestamp } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType, toDate } from '../firebase';
+import { db, handleFirestoreError, OperationType, toDate, collection, query, orderBy, onSnapshot, runTransaction, doc, serverTimestamp } from '../shims/supabase/firestore';
 import { CreditCard, Plus, ArrowUpRight, ArrowDownLeft, History, Wallet as WalletIcon, Search, X, CheckCircle2 } from 'lucide-react';
 import { WalletTransaction } from '../types';
 import { useNavigate } from 'react-router-dom';
@@ -18,9 +17,9 @@ const WalletPage: React.FC = () => {
   const [showQRModal, setShowQRModal] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-  const upiId = "vpk525252@okaxis"; // Placeholder UPI ID
-  const upiName = "Producer To Consumer App";
-  const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(upiName)}&am=${amount}&cu=INR`;
+  const upiId = '';
+  const upiName = 'P2C Marketplace';
+  const upiUrl = upiId ? `upi://pay?pa=${upiId}&pn=${encodeURIComponent(upiName)}&am=${amount}&cu=INR` : '';
 
   useEffect(() => {
     if (!user) return;
@@ -181,14 +180,20 @@ const WalletPage: React.FC = () => {
                 </div>
 
                 <div className="bg-gray-50 p-10 rounded-[2.5rem] flex flex-col items-center justify-center space-y-8 border border-gray-100 shadow-inner">
-                  <div className="bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 group hover:scale-105 transition-transform duration-500">
-                    <QRCodeSVG 
-                      value={upiUrl} 
-                      size={240}
-                      level="H"
-                      includeMargin={true}
-                    />
-                  </div>
+                  {upiId ? (
+                    <div className="bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 group hover:scale-105 transition-transform duration-500">
+                      <QRCodeSVG 
+                        value={upiUrl} 
+                        size={240}
+                        level="H"
+                        includeMargin={true}
+                      />
+                    </div>
+                  ) : (
+                    <div className="bg-white p-8 rounded-3xl border border-dashed border-gray-200 text-gray-500 text-sm font-medium text-center max-w-xs">
+                      UPI details will be configured for live payments.
+                    </div>
+                  )}
                   <div className="text-center">
                     <div className="flex items-baseline justify-center space-x-2">
                       <span className="text-xl font-black text-indigo-600">₹</span>
